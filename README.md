@@ -2,8 +2,6 @@
 
 This Figma plugin simplifies screen management by allowing you to find and replace content in frames with ease. It's like "Find and Replace" for text but designed for screens.
 
-➡️ [Visit the Figma Plugin Page] https://www.figma.com/community/plugin/1426588442353231584/find-and-replace-screens
-
 ## Features
 
 - **Find Screens**: Search for frames by name in the current page.
