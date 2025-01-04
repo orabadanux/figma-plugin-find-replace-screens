@@ -2,130 +2,246 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Replace screens</title>
+    <title>Find and Replace Screens</title>
     <style>
       body {
-        font-family: 'Inter', sans-serif;
+        font-family: "Inter", sans-serif;
         background-color: #fff;
         padding: 24px;
         margin: 0;
+        font-size: 14px;
       }
 
       h2 {
-        font-size: 1.25rem;
-        font-weight: 700;
+        font-size: 16px;
+        font-weight: 600;
         margin-bottom: 16px;
         color: #1f2937;
+        text-align: left;
+      }
+
+      .input-group {
+        margin-bottom: 16px;
       }
 
       label {
         display: block;
-        font-size: 0.875rem;
+        font-size: 14px;
         font-weight: 500;
         color: #374151;
         margin-bottom: 8px;
       }
 
+      .input-container {
+        position: relative;
+      }
+
       input {
         width: 100%;
-        padding: 8px;
+        padding: 12px 12px;
         border: 1px solid #d1d5db;
-        border-radius: 0.375rem;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        margin-bottom: 16px;
-        font-size: 1rem;
-        transition: border-color 0.2s, box-shadow 0.2s;
+        border-radius: 6px;
+        font-size: 16px;
+        box-sizing: border-box;
+        transition: all 0.2s ease;
       }
 
       input:focus {
-        border-color: #6366f1;
+        border-color: #2563eb;
         outline: none;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+      }
+
+      .dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background-color: white;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        max-height: 200px;
+        overflow-y: auto;
+        margin-top: 4px;
+        display: none;
+      }
+
+      .dropdown-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .dropdown-item:hover {
+        background-color: #f3f4f6;
       }
 
       button {
         width: 100%;
-        background-color: #4c51bf;
+        background-color: #2563eb;
         color: white;
-        padding: 8px 0;
-        border-radius: 0.375rem;
-        font-size: 1rem;
-        font-weight: 700;
+        padding: 16px 16px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
         border: none;
         cursor: pointer;
-        transition: background-color 0.3s, box-shadow 0.3s;
-        margin-top: 16px;
+        transition: background-color 0.2s;
+        margin-top: 8px;
       }
 
       button:hover {
-        background-color: #4338ca;
+        background-color: #1d4ed8;
       }
 
-      button:focus {
-        box-shadow: 0 0 0 4px rgba(165, 180, 252, 0.5);
+      button:disabled {
+        background-color: #9ca3af;
+        cursor: not-allowed;
       }
     </style>
   </head>
   <body>
-    <h2>Replace screens</h2>
 
-    <label for="sourceName">Choose new screen</label>
-    <input 
-      type="text" 
-      id="sourceName" 
-      placeholder="Select or type a new screen"
-      list="frameNames"
-    />
-    <datalist id="frameNames"></datalist>
+    <div class="input-group">
+      <label for="targetName">Find screen</label>
+      <div class="input-container">
+        <input
+          type="text"
+          id="targetName"
+          placeholder="Find..."
+          autocomplete="off"
+        />
+        <div id="targetDropdown" class="dropdown"></div>
+      </div>
+    </div>
 
-    <label for="targetName">Select screen to replace</label>
-    <input 
-      type="text" 
-      id="targetName" 
-      placeholder="Select or type a screen"
-      list="frameNames"
-    />
+    <div class="input-group">
+      <label for="sourceName">Replace with</label>
+      <div class="input-container">
+        <input
+          type="text"
+          id="sourceName"
+          placeholder="Replace with..."
+          autocomplete="off"
+        />
+        <div id="sourceDropdown" class="dropdown"></div>
+      </div>
+    </div>
 
-    <button id="synchronizeButton">Replace screen</button>
+    <button id="replaceButton">Replace</button>
 
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
+      let frameNames = [];
+      const sourceInput = document.getElementById("sourceName");
+      const targetInput = document.getElementById("targetName");
+      const sourceDropdown = document.getElementById("sourceDropdown");
+      const targetDropdown = document.getElementById("targetDropdown");
+      const replaceButton = document.getElementById("replaceButton");
 
-        const button = document.getElementById('synchronizeButton');
-        const sourceInput = document.getElementById('sourceName');
-        const targetInput = document.getElementById('targetName');
-        const frameList = document.getElementById('frameNames');
+      // Enable/disable replace button based on input values
+      function updateReplaceButton() {
+        const sourceValue = sourceInput.value.trim();
+        const targetValue = targetInput.value.trim();
+        replaceButton.disabled = !sourceValue || !targetValue;
+      }
 
-        window.onmessage = (event) => {
-          const message = event.data.pluginMessage;
-          if (message.type === 'populate-frames') {
-            const frameNames = message.frameNames;
+      sourceInput.addEventListener("input", updateReplaceButton);
+      targetInput.addEventListener("input", updateReplaceButton);
 
-            frameList.innerHTML = '';
-            frameNames.forEach((name) => {
-              const option = document.createElement('option');
-              option.value = name;
-              frameList.appendChild(option);
-            });
+      // Listen for messages from the plugin code
+      window.onmessage = (event) => {
+        if (!event.data.pluginMessage) return;
+
+        const message = event.data.pluginMessage;
+        console.log("UI received message:", message);
+
+        if (message.type === "populate-frames") {
+          frameNames = message.frameNames;
+          console.log("Available frames:", frameNames);
+        }
+      };
+
+      function filterFrames(query) {
+        return frameNames.filter((name) =>
+          name.toLowerCase().includes(query.toLowerCase())
+        );
+      }
+
+      function showDropdown(input, dropdown, query) {
+        dropdown.innerHTML = "";
+        const matches = filterFrames(query);
+
+        if (matches.length === 0) {
+          dropdown.style.display = "none";
+          return;
+        }
+
+        matches.forEach((name) => {
+          const item = document.createElement("div");
+          item.className = "dropdown-item";
+          item.textContent = name;
+
+          item.onclick = () => {
+            input.value = name;
+            dropdown.style.display = "none";
+            updateReplaceButton();
+          };
+
+          dropdown.appendChild(item);
+        });
+
+        dropdown.style.display = "block";
+      }
+
+      function setupInput(input, dropdown) {
+        input.addEventListener("input", () => {
+          const query = input.value.trim();
+          if (query) {
+            showDropdown(input, dropdown, query);
+          } else {
+            dropdown.style.display = "none";
           }
-        };
+        });
 
-        button.onclick = function () {
-          const sourceName = sourceInput.value;
-          const targetName = targetInput.value;
+        input.addEventListener("focus", () => {
+          const query = input.value.trim();
+          if (query) {
+            showDropdown(input, dropdown, query);
+          }
+        });
 
-          parent.postMessage(
-            {
-              pluginMessage: {
-                type: 'synchronize-frames',
-                sourceName,
-                targetName,
-              },
-            },
-            '*'
-          );
+        input.addEventListener("blur", () => {
+          setTimeout(() => {
+            dropdown.style.display = "none";
+          }, 150);
+        });
+      }
+
+      setupInput(sourceInput, sourceDropdown);
+      setupInput(targetInput, targetDropdown);
+
+      replaceButton.onclick = () => {
+            const sourceName = sourceInput.value.trim();  // Changed from findName
+            const targetName = targetInput.value.trim();  // Changed from replaceName
+
+            console.log("Preparing to send values:", { sourceName, targetName });
+
+            if (!sourceName || !targetName) {
+                alert("Please fill in both fields");
+                return;
+            }
+
+            const message = {
+                type: "synchronize-frames",
+                sourceName,     // Changed from findName
+                targetName     // Changed from replaceName
+            };
+
+            console.log("Sending message to plugin:", message);
+            parent.postMessage({ pluginMessage: message }, "*");
         };
-      });
     </script>
   </body>
 </html>

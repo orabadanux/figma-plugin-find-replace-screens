@@ -1,8 +1,8 @@
 {
-  "name": "Replace screens",
+  "name": "Find and Replace Screens",
   "id": "1426588442353231584",
   "api": "1.0.0",
-  "main": "code.js",
+  "main": "dist/code.js",
   "capabilities": [],
   "enableProposedApi": false,
   "documentAccess": "dynamic-page",

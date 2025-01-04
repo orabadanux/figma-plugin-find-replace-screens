@@ -1,7 +1,7 @@
 {
   "name": "update-screens",
-  "version": "1.0.0",
-  "description": "Your Figma Plugin",
+  "version": "1.0.1",
+  "description": "Find and Replace Screens Plugin for Figma",
   "main": "code.js",
   "scripts": {
     "build": "tsc",
@@ -15,7 +15,7 @@
   "license": "",
   "devDependencies": {
     "@figma/eslint-plugin-figma-plugins": "*",
-    "@figma/plugin-typings": "^1.100.2",
+    "@figma/plugin-typings": "^1.106.0",
     "@typescript-eslint/eslint-plugin": "^6.12.0",
     "@typescript-eslint/parser": "^6.12.0",
     "css-loader": "^7.1.2",
