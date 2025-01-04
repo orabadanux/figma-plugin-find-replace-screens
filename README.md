@@ -6,6 +6,7 @@ This Figma plugin simplifies screen management by allowing you to find and repla
   <source src="assets/FigmaPlugin.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
+
 ## Features
 
 - **Find Screens**: Search for frames by name in the current page.
