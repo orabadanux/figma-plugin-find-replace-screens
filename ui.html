@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <title>Find and Replace Screens</title>
     <style>
+      /* Basic styling for the UI */
       body {
         font-family: "Inter", sans-serif;
         background-color: #fff;
@@ -103,7 +104,7 @@
     </style>
   </head>
   <body>
-
+    <!-- Input field for selecting the frame to find -->
     <div class="input-group">
       <label for="targetName">Find screen</label>
       <div class="input-container">
@@ -117,6 +118,7 @@
       </div>
     </div>
 
+    <!-- Input field for selecting the replacement frame -->
     <div class="input-group">
       <label for="sourceName">Replace with</label>
       <div class="input-container">
@@ -130,9 +132,12 @@
       </div>
     </div>
 
+    <!-- Button to initiate the replacement action -->
     <button id="replaceButton">Replace</button>
 
     <script>
+
+      // Initialize variables to hold frame names and UI elements
       let frameNames = [];
       const sourceInput = document.getElementById("sourceName");
       const targetInput = document.getElementById("targetName");
@@ -140,35 +145,36 @@
       const targetDropdown = document.getElementById("targetDropdown");
       const replaceButton = document.getElementById("replaceButton");
 
-      // Enable/disable replace button based on input values
+      // Update the replace button's state based on input fields
       function updateReplaceButton() {
         const sourceValue = sourceInput.value.trim();
         const targetValue = targetInput.value.trim();
         replaceButton.disabled = !sourceValue || !targetValue;
       }
 
+      // Listen for input changes to enable/disable the replace button
       sourceInput.addEventListener("input", updateReplaceButton);
       targetInput.addEventListener("input", updateReplaceButton);
 
-      // Listen for messages from the plugin code
+      // Handle incoming messages from the Figma plugin backend
       window.onmessage = (event) => {
         if (!event.data.pluginMessage) return;
 
         const message = event.data.pluginMessage;
-        console.log("UI received message:", message);
 
         if (message.type === "populate-frames") {
           frameNames = message.frameNames;
-          console.log("Available frames:", frameNames);
         }
       };
 
+      // Filter frame names based on user input
       function filterFrames(query) {
         return frameNames.filter((name) =>
           name.toLowerCase().includes(query.toLowerCase())
         );
       }
 
+      // Display a dropdown with filtered frame names
       function showDropdown(input, dropdown, query) {
         dropdown.innerHTML = "";
         const matches = filterFrames(query);
@@ -183,6 +189,7 @@
           item.className = "dropdown-item";
           item.textContent = name;
 
+          // Set the input value when an item is clicked
           item.onclick = () => {
             input.value = name;
             dropdown.style.display = "none";
@@ -195,6 +202,7 @@
         dropdown.style.display = "block";
       }
 
+      // Setup event listeners for the input fields
       function setupInput(input, dropdown) {
         input.addEventListener("input", () => {
           const query = input.value.trim();
@@ -215,18 +223,17 @@
         input.addEventListener("blur", () => {
           setTimeout(() => {
             dropdown.style.display = "none";
-          }, 150);
+          }, 150); // Delay to allow item click
         });
       }
 
       setupInput(sourceInput, sourceDropdown);
       setupInput(targetInput, targetDropdown);
 
+      // Send the replacement action to the plugin backend
       replaceButton.onclick = () => {
-            const sourceName = sourceInput.value.trim();  // Changed from findName
-            const targetName = targetInput.value.trim();  // Changed from replaceName
-
-            console.log("Preparing to send values:", { sourceName, targetName });
+            const sourceName = sourceInput.value.trim();
+            const targetName = targetInput.value.trim();
 
             if (!sourceName || !targetName) {
                 alert("Please fill in both fields");
@@ -235,11 +242,10 @@
 
             const message = {
                 type: "synchronize-frames",
-                sourceName,     // Changed from findName
-                targetName     // Changed from replaceName
+                sourceName,
+                targetName
             };
 
-            console.log("Sending message to plugin:", message);
             parent.postMessage({ pluginMessage: message }, "*");
         };
     </script>

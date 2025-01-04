@@ -1,46 +1,51 @@
 // code.ts
 /// <reference types="@figma/plugin-typings" />
 
-// Show UI with specified dimensions
+// Show the UI with a specified width and height
 figma.showUI(__html__, { width: 420, height: 280 });
 
-// Send frame names when the plugin starts
+/**
+ * Retrieves all top-level frames on the current Figma page,
+ * removes duplicates by name, and returns a sorted list of unique frame names.
+ */
 function getScreenFrames() {
-  // Get only direct children of the page that are frames
   const topLevelFrames = figma.currentPage.children.filter(
     (node): node is FrameNode => node.type === 'FRAME'
   );
-  
-  // Get unique names
+
+  // Extract unique names and sort them alphabetically
   const uniqueNames = Array.from(new Set(
     topLevelFrames.map(frame => frame.name)
   )).sort();
-  
+
   return uniqueNames;
 }
 
-// Send frame names when the plugin starts
+/**
+ * Sends the list of unique frame names to the UI for display.
+ */
 function sendFrameNames() {
   const screenNames = getScreenFrames();
-  console.log("Plugin: Sending screen names:", screenNames);
-  
+
+  // Post the frame names to the UI
   figma.ui.postMessage({
     type: 'populate-frames',
     frameNames: screenNames
   });
 }
 
+// Initial sending of frame names when the plugin starts
 sendFrameNames();
 
-// Listen for messages from UI
+/**
+ * Handles messages sent from the UI.
+ */
 figma.ui.onmessage = (msg) => {
-  console.log("Plugin received message:", msg);
 
   if (msg.type === 'synchronize-frames') {
     const sourceName = msg.sourceName;
     const targetName = msg.targetName;
-    
-    console.log("Processing synchronization:", { sourceName, targetName });
+
 
     try {
       if (!sourceName || !targetName) {
@@ -48,41 +53,40 @@ figma.ui.onmessage = (msg) => {
         return;
       }
 
-      // Find only top-level frames
+      // Retrieve all top-level frames on the current page
       const topLevelFrames = figma.currentPage.children.filter(
         (node): node is FrameNode => node.type === 'FRAME'
       );
 
-      // Find source frame from top-level frames
+      // Find the source frame
       const sourceFrame = topLevelFrames.find(frame => frame.name === sourceName);
       if (!sourceFrame) {
         figma.notify(`No top-level frame found with name "${sourceName}"`);
         return;
       }
 
-      // Find target frames from top-level frames
+      // Find all target frames with the specified name
       const targetFrames = topLevelFrames.filter(frame => frame.name === targetName);
       if (targetFrames.length === 0) {
         figma.notify(`No top-level frames found with name "${targetName}"`);
         return;
       }
 
-      // Perform replacement
+      // Replace the content of each target frame with the source frame's content
       for (const frame of targetFrames) {
-        // Skip if it's the same frame
         if (frame.id === sourceFrame.id) continue;
 
-        // Clear existing children
+        // Remove all children from the target frame
         for (const child of [...frame.children]) {
           child.remove();
         }
 
-        // Clone children from source frame
+        // Clone and append children from the source frame
         for (const child of sourceFrame.children) {
           frame.appendChild(child.clone());
         }
 
-        // Copy properties
+        // Apply the properties of the source frame to the target frame
         applyProperties(sourceFrame, frame);
       }
 
@@ -96,6 +100,9 @@ figma.ui.onmessage = (msg) => {
   }
 };
 
+/**
+ * Copies the visual and layout properties from the source frame to the target frame.
+ */
 function applyProperties(source: FrameNode, target: FrameNode) {
   target.layoutMode = source.layoutMode;
   target.primaryAxisSizingMode = source.primaryAxisSizingMode;
